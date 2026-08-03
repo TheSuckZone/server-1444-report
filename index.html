@@ -1,98 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Server 1444 Intelligence</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server 1444 — Inter-Kill Event Intelligence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{
-    background:#1d1d1d;
-    color:white;
-    font-family:Arial;
-    margin:40px;
-}
-
-h1{
-    color:#66ff66;
-}
-
-table{
-    border-collapse:collapse;
-    width:100%;
-}
-
-th,td{
-    border:1px solid #555;
-    padding:8px;
-    text-align:left;
-}
-
-th{
-    background:#333;
-}
-
-tr:nth-child(even){
-    background:#252525;
-}
+:root{--bg:#071018;--panel:#101c27;--panel2:#162635;--text:#edf6ff;--muted:#9bb0c3;--gold:#ffc857;--red:#ff5c5c;--blue:#49a6ff;--green:#41d17d;--purple:#b28cff;--border:#294052}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top,#12283a 0,#071018 42%);color:var(--text)}
+header{padding:34px 24px 22px;border-bottom:1px solid var(--border);background:rgba(4,12,19,.74);backdrop-filter:blur(8px);position:sticky;top:0;z-index:10}
+.wrap{max-width:1280px;margin:auto}
+.kicker{color:var(--gold);font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-size:.78rem}
+h1{margin:.35rem 0 .4rem;font-size:clamp(1.8rem,4vw,3.2rem)}
+.subtitle{color:var(--muted);margin:0}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:16px 24px;background:#09131d;border-bottom:1px solid var(--border);position:sticky;top:123px;z-index:9}
+.tab{border:1px solid var(--border);background:#10202d;color:var(--text);padding:11px 16px;border-radius:10px;cursor:pointer;font-weight:700;white-space:nowrap}
+.tab.active{background:linear-gradient(135deg,#1a75bc,#14517d);border-color:#55b1f3}
+main{padding:26px 24px 60px}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;gap:16px}
+.cards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:20px}
+.card,.panel{background:linear-gradient(180deg,rgba(22,38,53,.96),rgba(13,26,37,.96));border:1px solid var(--border);border-radius:15px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.card{padding:18px}.card .label{color:var(--muted);font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}.card .value{font-size:1.75rem;font-weight:900;margin-top:7px}.card .note{color:var(--muted);font-size:.84rem;margin-top:5px}
+.panel{padding:20px;margin-bottom:18px}
+.two{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.three{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+h2{margin:0 0 15px} h3{margin:0 0 12px}
+.hero-result{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.alliance-score{flex:1;min-width:240px;padding:18px;border-radius:14px;background:#0c1822;border:1px solid var(--border)}
+.alliance-score .name{font-size:1.4rem;font-weight:900}.alliance-score .score{font-size:2.2rem;font-weight:900;margin:7px 0}.winner{outline:2px solid var(--gold);box-shadow:0 0 28px rgba(255,200,87,.18)}
+.vs{font-size:1.4rem;font-weight:900;color:var(--muted)}
+.progress{height:14px;background:#071018;border-radius:999px;overflow:hidden;margin-top:10px}.progress span{display:block;height:100%;background:linear-gradient(90deg,#35a3ff,#79c8ff)}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:.76rem;font-weight:800}
+.tw{background:#5b2409;color:#ffd29a}.expert{background:#392566;color:#d7c4ff}.good{background:#113c2b;color:#9af2c2}.average{background:#25313b;color:#c8d6e3}
+table{width:100%;border-collapse:collapse}th,td{padding:11px 10px;border-bottom:1px solid #263b4b;text-align:left}th{color:#a9c1d4;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+tr:hover{background:rgba(73,166,255,.07)}.me{background:rgba(255,200,87,.11)!important;box-shadow:inset 4px 0 var(--gold)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.chartbox{height:360px}.smallchart{height:300px}
+.callout{border-left:4px solid var(--gold);padding:15px 17px;background:#16212a;border-radius:8px;color:#dcecff}
+.class-card{padding:18px;border-radius:14px;border:1px solid var(--border);background:#0c1822}
+.class-card strong{display:block;font-size:1.2rem;margin-bottom:5px}
+.search{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--border);background:#071018;color:white;margin-bottom:14px}
+footer{text-align:center;color:var(--muted);padding:25px;border-top:1px solid var(--border)}
+@media(max-width:700px){header{position:static}.tabs{top:0}.chartbox{height:300px}th:nth-child(3),td:nth-child(3){display:none}}
 </style>
-
 </head>
-
 <body>
+<header><div class="wrap"><div class="kicker">Server 1444 Intelligence Center</div><h1>Inter-Kill Event: TOP vs VNS</h1><p class="subtitle">Alliance performance, warrior classification, and battlefield contribution analysis</p></div></header>
+<nav class="tabs">
+<button class="tab active" data-tab="overview">Event Overview</button>
+<button class="tab" data-tab="battle">TOP vs VNS</button>
+<button class="tab" data-tab="classes">Warrior Classes</button>
+<button class="tab" data-tab="rankings">Full Rankings</button>
+<button class="tab" data-tab="method">Methodology</button>
+</nav>
+<main class="wrap">
+<section id="overview" class="section active">
+<div class="grid cards" id="summaryCards"></div>
+<div class="panel hero-result" id="heroResult"></div>
+<div class="grid two">
+<div class="panel"><h2>Points by Alliance</h2><div class="chartbox"><canvas id="allianceTotalChart"></canvas></div></div>
+<div class="panel"><h2>Event Power Concentration</h2><div class="chartbox"><canvas id="concentrationChart"></canvas></div></div>
+</div>
+<div class="panel"><h2>Battlefield Assessment</h2><div class="callout" id="assessment"></div></div>
+</section>
 
-<h1>Server 1444 Intelligence Report</h1>
+<section id="battle" class="section">
+<div class="grid two">
+<div class="panel"><h2>Points Produced by Warrior Class</h2><div class="chartbox"><canvas id="classPointsChart"></canvas></div></div>
+<div class="panel"><h2>Fighters in Each Class</h2><div class="chartbox"><canvas id="classCountChart"></canvas></div></div>
+</div>
+<div class="grid two" id="allianceBreakdowns"></div>
+</section>
 
-<p>Welcome to the Server 1444 statistics page.</p>
+<section id="classes" class="section">
+<div class="grid cards" id="classCards"></div>
+<div class="panel"><h2>True Warriors</h2><p class="subtitle">The top 10 event performers. RockyRaccoon is highlighted.</p><div style="overflow:auto"><table id="trueWarriorTable"></table></div></div>
+<div class="panel"><h2>All Classes</h2><div style="overflow:auto"><table id="classTable"></table></div></div>
+</section>
 
-<h2>Current Statistics</h2>
+<section id="rankings" class="section">
+<div class="panel"><h2>Complete Event Leaderboard</h2><input id="search" class="search" placeholder="Search player or alliance..."><div style="overflow:auto"><table id="rankingTable"></table></div></div>
+</section>
 
-<ul>
-<li>Players Ranked: 63</li>
-<li>Total Points: 1.268 Billion</li>
-<li>Average: 20.13 Million</li>
-<li>Median: 8.97 Million</li>
-</ul>
+<section id="method" class="section">
+<div class="panel"><h2>How the Warrior Classes Were Calculated</h2>
+<p>The classification uses ranked percentile bands rather than arbitrary personal judgments. This keeps the system repeatable for future events.</p>
+<div class="grid two">
+<div class="class-card"><strong>True Warriors — Top 10</strong>Ranks 1–10; roughly the top 16% of the field. Minimum score: 51,414,490.</div>
+<div class="class-card"><strong>Experts — Ranks 11–25</strong>The next 24% of the field. Minimum score: 12,996,999.</div>
+<div class="class-card"><strong>Good — Ranks 26–44</strong>The next 30% of the field. Minimum score: 3,399,966.</div>
+<div class="class-card"><strong>Average — Ranks 45–63</strong>The remaining 30% of ranked participants.</div>
+</div>
+<p class="callout">This is a performance classification for this event snapshot only. It does not measure leadership, teamwork, availability, resources spent, or long-term alliance value.</p>
+</div>
+</section>
+</main>
+<footer>Server 1444 • Inter-Kill Event Intelligence Report</footer>
+<script>
+const players = [{"rank": 1, "player": "Саня", "alliance": "TOP", "points": 112227126, "tier": "True Warriors"}, {"rank": 2, "player": "Js", "alliance": "VNS", "points": 98225514, "tier": "True Warriors"}, {"rank": 3, "player": "Love", "alliance": "VNS", "points": 87063670, "tier": "True Warriors"}, {"rank": 4, "player": "Maybach.S680", "alliance": "VNS", "points": 72919103, "tier": "True Warriors"}, {"rank": 5, "player": "†Giang†1226", "alliance": "VNS", "points": 64796441, "tier": "True Warriors"}, {"rank": 6, "player": "Sparky", "alliance": "TOP", "points": 64283672, "tier": "True Warriors"}, {"rank": 7, "player": "RockyRaccoon", "alliance": "TOP", "points": 58546127, "tier": "True Warriors"}, {"rank": 8, "player": "LongDienHuong", "alliance": "VNS", "points": 57897036, "tier": "True Warriors"}, {"rank": 9, "player": "ToanBacNinh", "alliance": "VNS", "points": 51465300, "tier": "True Warriors"}, {"rank": 10, "player": "HIRA", "alliance": "TOP", "points": 51414490, "tier": "True Warriors"}, {"rank": 11, "player": "ImmortaLeo", "alliance": "TOP", "points": 50830756, "tier": "Experts"}, {"rank": 12, "player": "John_wick44", "alliance": "TOP", "points": 35603042, "tier": "Experts"}, {"rank": 13, "player": "=Ryuk=", "alliance": "TOP", "points": 32914826, "tier": "Experts"}, {"rank": 14, "player": "Huy", "alliance": "VNS", "points": 31356394, "tier": "Experts"}, {"rank": 15, "player": "LUFFY", "alliance": "TOP", "points": 27358696, "tier": "Experts"}, {"rank": 16, "player": "KILLツH", "alliance": "TOP", "points": 23719727, "tier": "Experts"}, {"rank": 17, "player": "?", "alliance": "VNS", "points": 21180860, "tier": "Experts"}, {"rank": 18, "player": "RedHeart", "alliance": "TOP", "points": 20699255, "tier": "Experts"}, {"rank": 19, "player": "CHINGIZKHAN", "alliance": "TOP", "points": 20157183, "tier": "Experts"}, {"rank": 20, "player": "~Ice~", "alliance": "TOP", "points": 19651686, "tier": "Experts"}, {"rank": 21, "player": "Anonimus", "alliance": "TOP", "points": 19565835, "tier": "Experts"}, {"rank": 22, "player": "EMI.RAMONE", "alliance": "TOP", "points": 16550394, "tier": "Experts"}, {"rank": 23, "player": "Bee", "alliance": "VNS", "points": 16338844, "tier": "Experts"}, {"rank": 24, "player": "NinjaTurtles", "alliance": "VNS", "points": 15712162, "tier": "Experts"}, {"rank": 25, "player": "BillyBones", "alliance": "TOP", "points": 12996999, "tier": "Experts"}, {"rank": 26, "player": "jack!", "alliance": "TOP", "points": 11793229, "tier": "Good"}, {"rank": 27, "player": "Unnamed", "alliance": "TOP", "points": 11620348, "tier": "Good"}, {"rank": 28, "player": "Lio", "alliance": "TOP", "points": 10953458, "tier": "Good"}, {"rank": 29, "player": "Miza", "alliance": "TOP", "points": 10936764, "tier": "Good"}, {"rank": 30, "player": "Кукуруза", "alliance": "VNS", "points": 10868916, "tier": "Good"}, {"rank": 31, "player": "NEGAN VIP", "alliance": "TOP", "points": 10248669, "tier": "Good"}, {"rank": 32, "player": "Haiphong", "alliance": "VNS", "points": 8966732, "tier": "Good"}, {"rank": 33, "player": "Zainmmousa", "alliance": "TOP", "points": 8472567, "tier": "Good"}, {"rank": 34, "player": "Spada", "alliance": "TOP", "points": 8135158, "tier": "Good"}, {"rank": 35, "player": "Commanderrrrrr", "alliance": "Independent", "points": 7118755, "tier": "Good"}, {"rank": 36, "player": "Người_HP", "alliance": "VNS", "points": 6157248, "tier": "Good"}, {"rank": 37, "player": "minhtcan", "alliance": "VNS", "points": 6106336, "tier": "Good"}, {"rank": 38, "player": "Averson", "alliance": "TOP", "points": 5935017, "tier": "Good"}, {"rank": 39, "player": "FusionGradingCo", "alliance": "VNS", "points": 5509442, "tier": "Good"}, {"rank": 40, "player": "Anka", "alliance": "TOP", "points": 5345598, "tier": "Good"}, {"rank": 41, "player": "Chupa.Chups", "alliance": "TOP", "points": 3979861, "tier": "Good"}, {"rank": 42, "player": "GaGa", "alliance": "VNS", "points": 3830199, "tier": "Good"}, {"rank": 43, "player": "Olga", "alliance": "TOP", "points": 3429629, "tier": "Good"}, {"rank": 44, "player": "Ghost", "alliance": "TOP", "points": 3399966, "tier": "Good"}, {"rank": 45, "player": "Eden", "alliance": "TOP", "points": 3342396, "tier": "Average"}, {"rank": 46, "player": "Milhao_Tunel", "alliance": "VNS", "points": 3303284, "tier": "Average"}, {"rank": 47, "player": "BichNgan", "alliance": "VNS", "points": 3167267, "tier": "Average"}, {"rank": 48, "player": "Vicky", "alliance": "TOP", "points": 3160457, "tier": "Average"}, {"rank": 49, "player": "ngoctram2026", "alliance": "VNS", "points": 3024753, "tier": "Average"}, {"rank": 50, "player": "Ganemedes", "alliance": "TOP", "points": 3024238, "tier": "Average"}, {"rank": 51, "player": "SYN219", "alliance": "VNS", "points": 2408780, "tier": "Average"}, {"rank": 52, "player": "KENDAL72", "alliance": "TOP", "points": 2392538, "tier": "Average"}, {"rank": 53, "player": "EDITOR", "alliance": "TOP", "points": 2287823, "tier": "Average"}, {"rank": 54, "player": "Sam", "alliance": "TOP", "points": 2232239, "tier": "Average"}, {"rank": 55, "player": "I•Phi", "alliance": "VNS", "points": 2110475, "tier": "Average"}, {"rank": 56, "player": "Leo", "alliance": "TOP", "points": 2077716, "tier": "Average"}, {"rank": 57, "player": "ZeZoOoo", "alliance": "VNS", "points": 1846082, "tier": "Average"}, {"rank": 58, "player": "Gauden22", "alliance": "VNS", "points": 1631032, "tier": "Average"}, {"rank": 59, "player": "KhaTaR", "alliance": "VNS", "points": 1300625, "tier": "Average"}, {"rank": 60, "player": "HieuBacNinh", "alliance": "VNS", "points": 1290389, "tier": "Average"}, {"rank": 61, "player": "ThanhLong", "alliance": "VNS", "points": 1255418, "tier": "Average"}, {"rank": 62, "player": "Terry", "alliance": "VNS", "points": 1063997, "tier": "Average"}, {"rank": 63, "player": "J.A.R.", "alliance": "TOP", "points": 1055045, "tier": "Average"}];
+const fmt=n=>n.toLocaleString("en-US");
+const short=n=>n>=1e9?(n/1e9).toFixed(2)+"B":(n/1e6).toFixed(1)+"M";
+const tierClass=t=>t==="True Warriors"?"tw":t==="Experts"?"expert":t==="Good"?"good":"average";
+const alliances=["TOP","VNS"];
+const tiers=["True Warriors","Experts","Good","Average"];
+const relevant=players.filter(p=>alliances.includes(p.alliance));
+const byAlliance=a=>players.filter(p=>p.alliance===a);
+const total=a=>byAlliance(a).reduce((s,p)=>s+p.points,0);
+const grand=players.reduce((s,p)=>s+p.points,0);
+const topTotal=total("TOP"), vnsTotal=total("VNS");
+const winner=topTotal>vnsTotal?"TOP":"VNS", margin=Math.abs(topTotal-vnsTotal);
+const med=arr=>{const x=[...arr].sort((a,b)=>a-b),m=Math.floor(x.length/2);return x.length%2?x[m]:(x[m-1]+x[m])/2};
 
-<h2>Top Five</h2>
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+ document.querySelectorAll(".tab,.section").forEach(x=>x.classList.remove("active"));
+ b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active");
+});
 
-<table>
+document.getElementById("summaryCards").innerHTML=[
+["Ranked Fighters",players.length,"Complete snapshot"],
+["Total Event Points",short(grand),fmt(grand)],
+["Average Score",short(grand/players.length),"Across all ranked fighters"],
+["Median Score",short(med(players.map(p=>p.points))),"Middle-ranked performance"],
+["Top-10 Share",(players.slice(0,10).reduce((s,p)=>s+p.points,0)/grand*100).toFixed(1)+"%","Power is concentrated at the top"]
+].map(x=>`<div class="card"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="note">${x[2]}</div></div>`).join("");
 
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Points</th>
-</tr>
+document.getElementById("heroResult").innerHTML=`
+<div class="alliance-score ${winner==="TOP"?"winner":""}"><div class="name">TOP</div><div class="score">${fmt(topTotal)}</div><div>${byAlliance("TOP").length} ranked fighters • Average ${short(topTotal/byAlliance("TOP").length)}</div><div class="progress"><span style="width:${topTotal/(topTotal+vnsTotal)*100}%"></span></div></div>
+<div class="vs">VS</div>
+<div class="alliance-score ${winner==="VNS"?"winner":""}"><div class="name">VNS</div><div class="score">${fmt(vnsTotal)}</div><div>${byAlliance("VNS").length} ranked fighters • Average ${short(vnsTotal/byAlliance("VNS").length)}</div><div class="progress"><span style="width:${vnsTotal/(topTotal+vnsTotal)*100}%"></span></div></div>`;
+document.getElementById("assessment").innerHTML=`<strong>${winner} leads the ranked scoreboard by ${fmt(margin)} points.</strong> TOP has more ranked participants, while VNS has the higher points-per-player average. The event is decided not only by the stars at the top, but by how much the Expert, Good, and Average classes contribute behind them.`;
 
-<tr>
-<td>1</td>
-<td>Caня</td>
-<td>112,227,126</td>
-</tr>
+Chart.defaults.color="#c9d8e5";Chart.defaults.borderColor="#294052";
+new Chart(document.getElementById("allianceTotalChart"),{type:"bar",data:{labels:alliances,datasets:[{label:"Points",data:[topTotal,vnsTotal],backgroundColor:["#49a6ff","#ff5c5c"]}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>short(v)}}}}});
+const top10=players.slice(0,10).reduce((s,p)=>s+p.points,0), rest=grand-top10;
+new Chart(document.getElementById("concentrationChart"),{type:"doughnut",data:{labels:["Top 10","Ranks 11–63"],datasets:[{data:[top10,rest],backgroundColor:["#ffc857","#294052"]}]},options:{maintainAspectRatio:false,plugins:{legend:{position:"bottom"}}}});
 
-<tr>
-<td>2</td>
-<td>Js</td>
-<td>98,225,514</td>
-</tr>
+const classPoints=alliances.map(a=>tiers.map(t=>byAlliance(a).filter(p=>p.tier===t).reduce((s,p)=>s+p.points,0)));
+new Chart(document.getElementById("classPointsChart"),{type:"bar",data:{labels:tiers,datasets:[{label:"TOP",data:classPoints[0],backgroundColor:"#49a6ff"},{label:"VNS",data:classPoints[1],backgroundColor:"#ff5c5c"}]},options:{maintainAspectRatio:false,scales:{y:{ticks:{callback:v=>short(v)}}}}});
+const classCounts=alliances.map(a=>tiers.map(t=>byAlliance(a).filter(p=>p.tier===t).length));
+new Chart(document.getElementById("classCountChart"),{type:"bar",data:{labels:tiers,datasets:[{label:"TOP",data:classCounts[0],backgroundColor:"#49a6ff"},{label:"VNS",data:classCounts[1],backgroundColor:"#ff5c5c"}]},options:{maintainAspectRatio:false,scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
 
-<tr>
-<td>3</td>
-<td>Love</td>
-<td>87,063,670</td>
-</tr>
+document.getElementById("allianceBreakdowns").innerHTML=alliances.map(a=>{
+ const members=byAlliance(a), at=total(a);
+ return `<div class="panel"><h2>${a} Performance Profile</h2>${tiers.map(t=>{const arr=members.filter(p=>p.tier===t),pts=arr.reduce((s,p)=>s+p.points,0);return `<div style="margin:13px 0"><div style="display:flex;justify-content:space-between"><span><span class="badge ${tierClass(t)}">${t}</span> ${arr.length} fighters</span><strong>${short(pts)} (${(pts/at*100).toFixed(1)}%)</strong></div><div class="progress"><span style="width:${pts/at*100}%"></span></div></div>`}).join("")}</div>`;
+}).join("");
 
-<tr>
-<td>4</td>
-<td>Maybach.S680</td>
-<td>72,919,103</td>
-</tr>
+document.getElementById("classCards").innerHTML=tiers.map(t=>{const arr=players.filter(p=>p.tier===t),pts=arr.reduce((s,p)=>s+p.points,0);return `<div class="card"><span class="badge ${tierClass(t)}">${t}</span><div class="value">${arr.length}</div><div class="note">${short(pts)} total • ${(pts/grand*100).toFixed(1)}% of all points</div></div>`}).join("");
 
-<tr>
-<td>5</td>
-<td>Giang</td>
-<td>64,796,441</td>
-</tr>
-
-</table>
-
-</body>
-</html>
+function table(rows){
+ return `<thead><tr><th>Rank</th><th>Player</th><th>Alliance</th><th>Class</th><th class="num">Points</th></tr></thead><tbody>${rows.map(p=>`<tr class="${p.player==="RockyRaccoon"?"me":""}"><td>${p.rank}</td><td><strong>${p.player}</strong>${p.player==="RockyRaccoon"?' <span style="color:#ffc857">★</span>':""}</td><td>${p.alliance}</td><td><span class="badge ${tierClass(p.tier)}">${p.tier}</span></td><td class="num">${fmt(p.points)}</td></tr>`).join("")}</tbody>`;
+}
+document.getElementById("trueWarriorTable").innerHTML=table(players.filter(p=>p.tier==="True Warriors"));
+document.getElementById("classTable").innerHTML=table(players);
+document.getElementById("rankingTable").innerHTML=table(players);
+document.getElementById("search").addEventListener("input",e=>{const q=e.target.value.toLowerCase();document.getElementById("rankingTable").innerHTML=table(players.filter(p=>`${p.player} ${p.alliance} ${p.tier}`.toLowerCase().includes(q)))});
+</script>
+</body></html>
